@@ -98,7 +98,7 @@ public void withdraw(double amount) {
     	
     	for(int i=10;i>=1;i--){
     		cal.add(Calendar.DAY_OF_MONTH, i* -1);//check for last ten days
-    		if(txnDate==cal.getTime().getTime())flag= true;
+    		if(txnDate.getTime()==cal.getTime().getTime())flag= true;
     		
     	}
     	return flag;
