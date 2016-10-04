@@ -17,11 +17,13 @@ public class Account {
         this.transactions = new ArrayList<Transaction>();
     }
 
-    public void deposit(double amount) {
+    public  void deposit(double amount) {
         if (amount <= 0) {
             throw new IllegalArgumentException("amount must be greater than zero");
         } else {
-            transactions.add(new Transaction(amount));
+        	synchronized(this){///to make transactions atomic
+        	transactions.add(new Transaction(amount));
+        	}
         }
     }
 
@@ -29,7 +31,9 @@ public void withdraw(double amount) {
     if (amount <= 0) {
         throw new IllegalArgumentException("amount must be greater than zero");
     } else {
-        transactions.add(new Transaction(-amount));
+    	synchronized(this){///to make transactions atomic
+    	transactions.add(new Transaction(-amount));
+    	}
     }
 }
 
@@ -41,15 +45,11 @@ public void withdraw(double amount) {
                     return amount * 0.001;
                 else
                     return 1 + (amount-1000) * 0.002;
-//            case SUPER_SAVINGS:
-//                if (amount <= 4000)
-//                    return 20;
-            case MAXI_SAVINGS:
-                if (amount <= 1000)
-                    return amount * 0.02;
-                if (amount <= 2000)
-                    return 20 + (amount-1000) * 0.05;
-                return 70 + (amount-2000) * 0.1;
+
+            case MAXI_SAVINGS:  
+            	if(checkTxnsInLastTenDays())
+            		return amount * 0.05;
+                return amount * 0.001;
             default:
                 return amount * 0.001;
         }
@@ -69,5 +69,33 @@ public void withdraw(double amount) {
     public int getAccountType() {
         return accountType;
     }
-
+    
+    public boolean checkTxnsInLastTenDays(){
+    	boolean flag=false;
+    	
+    	Collections.reverse(this.transactions);///revers to start woith latest txn
+    	
+    	for(Transaction t: transactions){
+    		if(t.amount<0) {///check if it is withdrawls
+    			flag=checkDate(t.getTransactionDate());	
+    			break;
+    		}	
+    		
+    	}
+    	return flag;	
+    }
+    
+    private boolean checkDate(Date txnDate){
+    	boolean flag=false;
+    	
+    	Date today=new Date();
+    	Calendar cal=new GregorianCalendar();
+    	cal.setTime(today);
+    	
+    	for(int i=9;i>=0;i--){
+    		cal.add(Calendar.DAY_OF_MONTH, i* -1);//check for last ten days
+    		if(txnDate.getTime()==cal.getTime().getTime())flag= true;
+    	}
+    	return flag;
+    }
 }
